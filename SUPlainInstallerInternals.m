@@ -14,6 +14,10 @@
 #import <sys/wait.h>
 #import <dirent.h>
 #import <unistd.h>
+#include <dlfcn.h>
+#include <errno.h>
+#include <sys/xattr.h>
+
 
 @interface SUPlainInstaller (MMExtendedAttributes)
 // Removes the directory tree rooted at |root| from the file quarantine.
@@ -235,23 +239,32 @@ static BOOL AuthorizationExecuteWithPrivilegesAndWait(AuthorizationRef authoriza
 
 	NSString *tmpPath = [self _temporaryCopyNameForPath:dst];
 
-	if (![[NSFileManager defaultManager] movePath:dst toPath:tmpPath handler:self])
-	{
-		if (error != NULL)
-			*error = [NSError errorWithDomain:SUSparkleErrorDomain code:SUFileCopyFailure userInfo:[NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"Couldn't move %@ to %@.", dst, tmpPath] forKey:NSLocalizedDescriptionKey]];
-		return NO;			
+    if (! [[NSFileManager defaultManager] moveItemAtPath:dst toPath:tmpPath error:error]) {
+		if (error != NULL) {
+			*error = [NSError errorWithDomain:SUSparkleErrorDomain
+                                         code:SUFileCopyFailure
+                                     userInfo:[NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"Couldn't move %@ to %@.", dst, tmpPath] forKey:NSLocalizedDescriptionKey]];
+        }
+		return NO;
 	}
-	if (![[NSFileManager defaultManager] copyPath:src toPath:dst handler:self])
-	{
-		if (error != NULL)
+    
+    if (! [[NSFileManager defaultManager] copyItemAtPath:src toPath:dst error:error]) {
+		if (error != NULL) {
 			*error = [NSError errorWithDomain:SUSparkleErrorDomain code:SUFileCopyFailure userInfo:[NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"Couldn't copy %@ to %@.", src, dst] forKey:NSLocalizedDescriptionKey]];
-		return NO;			
+        }
+		return NO;
 	}
-	
+
 	// Trash the old copy of the app.
 	NSInteger tag = 0;
-	if (![[NSWorkspace sharedWorkspace] performFileOperation:NSWorkspaceRecycleOperation source:[tmpPath stringByDeletingLastPathComponent] destination:@"" files:[NSArray arrayWithObject:[tmpPath lastPathComponent]] tag:&tag])
-		NSLog(@"Sparkle error: couldn't move %@ to the trash. This is often a sign of a permissions error.", tmpPath);
+    if (! [[NSWorkspace sharedWorkspace] performFileOperation:NSWorkspaceRecycleOperation
+                                                      source:[tmpPath stringByDeletingLastPathComponent]
+                                                 destination:@""
+                                                       files:[NSArray arrayWithObject:[tmpPath lastPathComponent]]
+                                                         tag:&tag]) {
+        
+        NSLog(@"Sparkle error: couldn't move %@ to the trash. This is often a sign of a permissions error.", tmpPath);
+    }
 	
 	// If the currently-running application is trusted, the new
 	// version should be trusted as well.  Remove it from the
@@ -266,14 +279,6 @@ static BOOL AuthorizationExecuteWithPrivilegesAndWait(AuthorizationRef authoriza
 	
 	return YES;
 }
-
-@end
-
-#include <dlfcn.h>
-#include <errno.h>
-#include <sys/xattr.h>
-
-@implementation SUPlainInstaller (MMExtendedAttributes)
 
 + (int)removeXAttr:(const char*)name
           fromFile:(NSString*)file
@@ -319,8 +324,8 @@ static BOOL AuthorizationExecuteWithPrivilegesAndWait(AuthorizationRef authoriza
 	
 	// Only recurse if it's actually a directory.  Don't recurse into a
 	// root-level symbolic link.
-	NSDictionary* rootAttributes =
-	[[NSFileManager defaultManager] fileAttributesAtPath:root traverseLink:NO];
+    NSError *error;
+	NSDictionary* rootAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:root error:&error];
 	NSString* rootType = [rootAttributes objectForKey:NSFileType];
 	
 	if (rootType == NSFileTypeDirectory) {
