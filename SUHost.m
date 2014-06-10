@@ -19,7 +19,7 @@
 	{
         bundle = [aBundle retain];
 		if (![bundle bundleIdentifier])
-			NSLog(@"Sparkle Error: the bundle being updated at %@ has no CFBundleIdentifier! This will cause preference read/write to not work properly.");
+			NSLog(@"Sparkle Error: the bundle being updated has no CFBundleIdentifier! This will cause preference read/write to not work properly.");
     }
     return self;
 }
@@ -111,7 +111,9 @@
 	// More likely, we've got a reference to a Resources file by filename:
 	NSString *keyFilename = [self objectForInfoDictionaryKey:SUPublicDSAKeyFileKey];
 	if (!keyFilename) { return nil; }
-	return [NSString stringWithContentsOfFile:[bundle pathForResource:keyFilename ofType:nil]];
+    return [NSString stringWithContentsOfFile:[bundle pathForResource:keyFilename ofType:nil]
+                                     encoding:NSUTF8StringEncoding
+                                        error:nil];
 }
 
 - (NSArray *)systemProfile
@@ -211,7 +213,7 @@
 	OSErr err3 = Gestalt(gestaltSystemVersionBugFix, &bugfix);
 	if (!err1 && !err2 && !err3)
 	{
-		verStr = [NSString stringWithFormat:@"%d.%d.%d", major, minor, bugfix];
+		verStr = [NSString stringWithFormat:@"%d.%d.%d", (int)major, (int)minor, (int)bugfix];
 	}
 	else
 #endif

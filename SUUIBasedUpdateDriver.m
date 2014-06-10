@@ -121,8 +121,11 @@
 - (void)unarchiver:(SUUnarchiver *)ua extractedLength:(long)length
 {
 	// We do this here instead of in extractUpdate so that we only have a determinate progress bar for archives with progress.
-	if ([statusController maxProgressValue] == 0)
-		[statusController setMaxProgressValue:[[[[NSFileManager defaultManager] fileAttributesAtPath:downloadPath traverseLink:NO] objectForKey:NSFileSize] doubleValue]];
+	if ([statusController maxProgressValue] == 0) {
+        
+		[statusController setMaxProgressValue:[[[[NSFileManager defaultManager] attributesOfItemAtPath:downloadPath error:nil] objectForKey:NSFileSize] doubleValue]];
+    }
+    
 	[statusController setProgressValue:[statusController progressValue] + length];
 }
 
@@ -146,7 +149,11 @@
 
 - (void)abortUpdateWithError:(NSError *)error
 {
-	NSAlert *alert = [NSAlert alertWithMessageText:SULocalizedString(@"Update Error!", nil) defaultButton:SULocalizedString(@"Cancel Update", nil) alternateButton:nil otherButton:nil informativeTextWithFormat:[error localizedDescription]];
+	NSAlert *alert = [NSAlert alertWithMessageText:SULocalizedString(@"Update Error!", nil)
+                                     defaultButton:SULocalizedString(@"Cancel Update", nil)
+                                   alternateButton:nil
+                                       otherButton:nil
+                         informativeTextWithFormat:@"%@", [error localizedDescription]];
 	[self showModalAlert:alert];
 	[super abortUpdateWithError:error];
 }
