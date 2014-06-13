@@ -994,6 +994,7 @@
 		1DEB91B208733DA50010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Developer ID Application: FOTONIJA (WNN48MZV68)";
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				WARNING_CFLAGS = "-Wundeclared-selector";
@@ -1003,6 +1004,7 @@
 		1DEB91B308733DA50010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Developer ID Application: FOTONIJA (WNN48MZV68)";
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				WARNING_CFLAGS = "-Wundeclared-selector";
 			};
@@ -1011,6 +1013,7 @@
 		61072EAD0DF263BD008FE88B /* Release (GC dual-mode; 10.5-only) */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "Developer ID Application: FOTONIJA (WNN48MZV68)";
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				WARNING_CFLAGS = "-Wundeclared-selector";
 			};
